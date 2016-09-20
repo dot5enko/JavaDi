@@ -31,7 +31,10 @@ public class ServiceContainer {
     }
     
     public void addResource(Class name,Object resource) {
-       
+        Resource newResource = new Resource();
+        newResource.object = resource;
+        
+        this.objects.put(name.getName(), newResource);
     }
     
     public Object get(Class<?> name) throws DependencyException {
