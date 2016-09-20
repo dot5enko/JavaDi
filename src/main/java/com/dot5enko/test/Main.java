@@ -1,7 +1,8 @@
 package com.dot5enko.test;
 
-import com.dot5enko.di.DependencyInjector;
+import com.dot5enko.di.ServiceContainer;
 import com.dot5enko.test.mockup.FormatHelper;
+import com.dot5enko.test.mockup.Request;
 
 /**
  *
@@ -11,14 +12,16 @@ public class Main {
 
     public static void main(String[] args) {
 
-        DependencyInjector di = new DependencyInjector();
+        ServiceContainer sc = ServiceContainer.getInstance();
 
-        di.addLazyResource(FormatHelper.class, () -> {
+        sc.addLazyResource(FormatHelper.class, () -> {
             return new FormatHelper();
         });
         
+        sc.addResource(Request.class, args);
+        
         try {
-            FormatHelper fh = (FormatHelper)di.get(FormatHelper.class);
+            FormatHelper fh = (FormatHelper)sc.get(FormatHelper.class);
             
             System.out.println(fh.toUpper("hello world"));
         } catch (Exception e) {

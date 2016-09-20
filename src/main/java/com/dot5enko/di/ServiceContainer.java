@@ -6,12 +6,20 @@ import java.util.HashMap;
  *
  * @author serhio
  */
-public class DependencyInjector {
+public class ServiceContainer {
     
+    private static ServiceContainer instance = null;
     
-    public HashMap<String,Resource> objects;
+    public static  ServiceContainer getInstance() {
+        if (instance == null) {
+            instance = new ServiceContainer();
+        }
+        return instance;
+    }
+    
+    private static HashMap<String,Resource> objects;
 
-    public DependencyInjector() {
+    private ServiceContainer() {
         this.objects = new HashMap<>();
     }
     
