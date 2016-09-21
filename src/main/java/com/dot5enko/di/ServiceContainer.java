@@ -28,7 +28,7 @@ public class ServiceContainer {
     public void addLazyResource(Class<?> name, DelayedResourceHandler h) {
         Resource newResource = new Resource();
         newResource.handler = h;
-
+        
         this.objects.put(name.getCanonicalName(), newResource);
     }
 

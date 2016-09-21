@@ -24,20 +24,25 @@ public class Main {
             return new FormatHelper();
         });
         
-        sc.addLazyResource(Database.class, () -> {
-            return new Database();
+        sc.addLazyResource(MysqlDatabase.class, () -> {
+            return new MysqlDatabase();
+        });
+        
+        sc.addLazyResource(Logger.class,() -> {
+            return manager.instantiate(Logger.class);
         });
         
 
         try {
 
-            // Constructor injection example           
+            // Constructor injection example   
             IndexController controller = (IndexController) manager.instantiate(IndexController.class);
 
             
             ArrayList cabinetParams = new ArrayList<Object>();
             cabinetParams.add(new String("Sergiy"));
             
+            // getter setter example
             System.out.println(manager.invokeMethod(controller,"cabinetAction",cabinetParams));
 
         } catch (Exception e) {

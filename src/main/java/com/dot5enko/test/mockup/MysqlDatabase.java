@@ -1,10 +1,10 @@
 package com.dot5enko.test.mockup;
 
-public class Database {
+public class MysqlDatabase implements DatabaseInterface {
     
     private int insertId = 0;
     
-    public void RunQuery(String query) {
+    public void executeQuery(String query) {
         // this method does nothing
         this.insertId++;
     }

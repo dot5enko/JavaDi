@@ -1,20 +1,25 @@
 package com.dot5enko.test.mockup;
 
+import com.dot5enko.di.annotation.Inject;
+import com.dot5enko.di.annotation.InjectInstance;
+
 public class IndexController {
     
-    FormatHelper formatter;
+    @Inject
+    private Logger logger;
     
-    public IndexController(FormatHelper fh) {
-        this.formatter = fh;
-    }
+    @Inject
+    FormatHelper formatter;
     
     public String indexAction(Request request) {
         return "Hello ," + request.getUserAgent() + this.formatter.toUpper("This is the uppercased greeting from ") + "IndexController.indexAction";
     }
     
-    public String cabinetAction(Request request, Database db, String username) {
+    public String cabinetAction(Request request, MysqlDatabase db, String username) {
         
-        db.RunQuery("INSERT INTO some_log_table SET time = " + request.getRequestTime().getTime() + " AND ua = " + request.getUserAgent());
+        this.logger.log("cabinet action executed");
+        
+        db.executeQuery("INSERT INTO some_log_table SET time = " + request.getRequestTime().getTime() + " AND ua = " + request.getUserAgent());
         
         return "Hi, " + username + ", your ip is " + request.getRemoteAdress() + " lastInsertId :" + db.getLastInsertId();
     }

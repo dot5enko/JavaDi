@@ -1,6 +1,10 @@
 package com.dot5enko.di;
 
+import com.dot5enko.di.annotation.*;
+
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -8,7 +12,7 @@ import java.util.ArrayList;
 public class Instantiator {
 
     private ServiceContainer sc = ServiceContainer.getInstance();
-
+    
     public Object instantiate(Class<?> toInstantiate) throws DependencyException {
 
         try {
@@ -27,7 +31,31 @@ public class Instantiator {
                 throw new DependencyException(e.getMessage() + " When trying to instantiate " + toInstantiate.getName());
             }
 
-            return cc[0].newInstance(constructorParams.toArray());
+            Object newInstance = cc[0].newInstance(constructorParams.toArray());
+            
+            // TODO: catch here sub exceptions
+           
+            for (Field it : c.getDeclaredFields()) {
+                Annotation[] fieldAnnotations = it.getAnnotations();
+                Annotation anInject = it.getAnnotation(Inject.class);
+                if (anInject != null) {
+                    //System.out.println("trying to inject data into "+toInstantiate.getName()+"::"+it.getName());
+                         
+                    it.setAccessible(true);
+                    it.set(newInstance, sc.get(it.getType()));
+                } else {
+                    InjectInstance anInjectInterface = it.getAnnotation(InjectInstance.class);
+                    if (anInjectInterface != null) {
+                        //System.out.println("trying to inject interface data into "+toInstantiate.getName()+"::"+it.getName());
+                        
+                        it.setAccessible(true);
+                        it.set(newInstance, sc.get(anInjectInterface.value()));
+                    }
+                }
+
+            }
+
+            return newInstance;
 
         } catch (Exception ex) {
             throw new DependencyException("Error while trying to instantiate " + toInstantiate.getName() + ": " + ex.getMessage());
@@ -56,7 +84,7 @@ public class Instantiator {
                 }
             }
             throw new DependencyException("No method " + methodName + " found to invoke on " + toInvokeOn.getClass().getName());
-            
+
         } catch (Exception e) {
             throw new DependencyException("Error while invoking method " + methodName + ": " + e.getMessage());
         }
