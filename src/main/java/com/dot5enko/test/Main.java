@@ -14,10 +14,11 @@ public class Main {
     public static void main(String[] args) {
 
         ServiceContainer sc = ServiceContainer.getInstance();
-        
         Instantiator manager = new Instantiator();
 
+        
         // adding resources to service container
+        
         sc.addResource(Request.class, new Request());
 
         sc.addLazyResource(FormatHelper.class, () -> {
@@ -26,6 +27,10 @@ public class Main {
         
         sc.addLazyResource(MysqlDatabase.class, () -> {
             return new MysqlDatabase();
+        });
+        
+        sc.addLazyResource(PostgresDatabase.class, () -> {
+            return new PostgresDatabase();
         });
         
         sc.addLazyResource(Logger.class,() -> {

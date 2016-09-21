@@ -43,7 +43,7 @@ public class ServiceContainer {
        if (this.objects.containsKey(canonicalName)) {
             return this.objects.get(canonicalName).getAllocator();
         } else {
-            throw new DependencyException("No such object in dependency injector container");
+            throw new DependencyException("No such object ("+canonicalName+") in dependency injector container");
         }
     }
 

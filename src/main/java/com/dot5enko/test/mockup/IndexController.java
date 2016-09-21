@@ -15,13 +15,13 @@ public class IndexController {
         return "Hello ," + request.getUserAgent() + this.formatter.toUpper("This is the uppercased greeting from ") + "IndexController.indexAction";
     }
     
-    public String cabinetAction(Request request, MysqlDatabase db, String username) {
+    public String cabinetAction(Request request,@InjectInstance("com.dot5enko.test.mockup.PostgresDatabase") DatabaseInterface db, String username) {
         
         this.logger.log("cabinet action executed");
         
         db.executeQuery("INSERT INTO some_log_table SET time = " + request.getRequestTime().getTime() + " AND ua = " + request.getUserAgent());
         
-        return "Hi, " + username + ", your ip is " + request.getRemoteAdress() + " lastInsertId :" + db.getLastInsertId();
+        return "Hi, " + username + ", your ip is " + request.getRemoteAdress() + " lastInsertId :";
     }
     
 }

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class Instantiator {
 
     private ServiceContainer sc = ServiceContainer.getInstance();
-    
+
     public Object instantiate(Class<?> toInstantiate) throws DependencyException {
 
         try {
@@ -22,32 +22,27 @@ public class Instantiator {
 
             ArrayList<Object> constructorParams = new ArrayList<Object>();
 
-            // Fixme: check for constructor existance
-            try {
-                for (Parameter it : cc[0].getParameters()) {
-                    constructorParams.add(this.sc.get(it.getType().getCanonicalName()));
-                }
-            } catch (DependencyException e) {
-                throw new DependencyException(e.getMessage() + " When trying to instantiate " + toInstantiate.getName());
+            for (Parameter it : cc[0].getParameters()) {
+                constructorParams.add(this.sc.get(it.getType().getCanonicalName()));
             }
+           
 
             Object newInstance = cc[0].newInstance(constructorParams.toArray());
-            
+
             // TODO: catch here sub exceptions
-           
             for (Field it : c.getDeclaredFields()) {
                 Annotation[] fieldAnnotations = it.getAnnotations();
                 Annotation anInject = it.getAnnotation(Inject.class);
                 if (anInject != null) {
                     //System.out.println("trying to inject data into "+toInstantiate.getName()+"::"+it.getName());
-                         
+
                     it.setAccessible(true);
                     it.set(newInstance, sc.get(it.getType()));
                 } else {
                     InjectInstance anInjectInterface = it.getAnnotation(InjectInstance.class);
                     if (anInjectInterface != null) {
                         //System.out.println("trying to inject interface data into "+toInstantiate.getName()+"::"+it.getName());
-                        
+
                         it.setAccessible(true);
                         it.set(newInstance, sc.get(anInjectInterface.value()));
                     }
@@ -69,25 +64,21 @@ public class Instantiator {
      * without changing any configuration
      */
     public Object invokeMethod(Object toInvokeOn, String methodName, ArrayList<Object> methodAddParams) throws DependencyException {
-        try {
 
-            Class c = toInvokeOn.getClass();
+        Class c = toInvokeOn.getClass();
 
-            Method[] methods = c.getMethods();
+        Method[] methods = c.getMethods();
 
-            Method method = null;
-            ArrayList methodParams = new ArrayList<Object>();
+        Method method = null;
+        ArrayList methodParams = new ArrayList<Object>();
 
-            for (Method it : methods) {
-                if (it.getName().equals(methodName)) {
-                    return this.invokeMethod(toInvokeOn, methodName, methodAddParams, it.getParameterTypes());
-                }
+        for (Method it : methods) {
+            if (it.getName().equals(methodName)) {
+                
+                return this.invokeMethod(toInvokeOn, methodName, methodAddParams, it.getParameterTypes());
             }
-            throw new DependencyException("No method " + methodName + " found to invoke on " + toInvokeOn.getClass().getName());
-
-        } catch (Exception e) {
-            throw new DependencyException("Error while invoking method " + methodName + ": " + e.getMessage());
         }
+        throw new DependencyException("No method " + methodName + " found to invoke on " + toInvokeOn.getClass().getName());
     }
 
     public Object invokeMethod(Object toInvokeOn, String methodName, Class... paramTypes) throws DependencyException {
@@ -109,16 +100,26 @@ public class Instantiator {
 
             int currentAddinationalParam = 0;
 
-            for (Class it : paramTypes) {
-                try {
-                    methodParams.add(this.sc.get(it.getCanonicalName()));
-                } catch (DependencyException e) {
-                    if (extraParams.get(currentAddinationalParam).getClass().getCanonicalName().equals(it.getCanonicalName())) {
+            for (Parameter parameter : method.getParameters()) {
 
-                        methodParams.add(extraParams.get(currentAddinationalParam));
-                        currentAddinationalParam++;
-                    } else {
-                        throw new DependencyException("Error invoking a method: no proper resource found in service container nor provided as external param");
+                Class it = parameter.getType();
+                InjectInstance anInjectInterface = parameter.getAnnotation(InjectInstance.class);
+
+                if (anInjectInterface != null) {
+                    //System.out.println("trying to inject interface implementation (" + anInjectInterface.value() + ") for " + it.getSimpleName() + " into method parameter " + toInvokeOn.getClass().getSimpleName() + "::" + methodName);
+
+                    methodParams.add(sc.get(anInjectInterface.value()));
+                } else {
+                    try {
+                        methodParams.add(this.sc.get(it.getCanonicalName()));
+                    } catch (DependencyException e) {
+                        if (extraParams.get(currentAddinationalParam).getClass().getCanonicalName().equals(it.getCanonicalName())) {
+
+                            methodParams.add(extraParams.get(currentAddinationalParam));
+                            currentAddinationalParam++;
+                        } else {
+                            throw new DependencyException("no proper resource found in service container nor provided as external param for "+ parameter.getType().getSimpleName());
+                        }
                     }
                 }
             }
@@ -129,8 +130,7 @@ public class Instantiator {
 
             return method.invoke(toInvokeOn, methodParams.toArray());
         } catch (Exception ex) {
-            ex.printStackTrace();
-            throw new DependencyException("Error while trying to invoke method  " + methodName + ": " + ex.getMessage());
+            throw new DependencyException("Error while trying to invoke method "+toInvokeOn.getClass().getSimpleName()+"." + methodName + ": " + ex.getMessage());
         }
     }
 

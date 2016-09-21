@@ -4,15 +4,14 @@ package com.dot5enko.di;
  *
  * @author serhio
  */
-public class Resource<T> {
+public class Resource {
 
-    public T object;
-    public DelayedResourceHandler<T> handler = null;
+    public Object object;
+    public DelayedResourceHandler handler = null;
 
-    public T getAllocator() throws DependencyException{
+    public Object getAllocator() throws DependencyException{
         if (this.handler != null) {
-            this.object = (T) this.handler.initialize();
-            
+            this.object = this.handler.initialize();           
         }
 
         return this.object;
