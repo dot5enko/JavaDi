@@ -23,6 +23,11 @@ public class Main {
         sc.addLazyResource(FormatHelper.class, () -> {
             return new FormatHelper();
         });
+        
+        sc.addLazyResource(Database.class, () -> {
+            return new Database();
+        });
+        
 
         try {
 
