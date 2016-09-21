@@ -34,10 +34,42 @@ public class Instantiator {
         }
     }
 
+    /**
+     *
+     * This method allows to invoke a class method without providing a
+     * parameters types, which allows to dynamically change method injections
+     * without changing any configuration
+     */
+    public Object invokeMethod(Object toInvokeOn, String methodName, ArrayList<Object> methodAddParams) throws DependencyException {
+        try {
+
+            Class c = toInvokeOn.getClass();
+
+            Method[] methods = c.getMethods();
+
+            Method method = null;
+            ArrayList methodParams = new ArrayList<Object>();
+
+            for (Method it : methods) {
+                if (it.getName().equals(methodName)) {
+                    return this.invokeMethod(toInvokeOn, methodName, methodAddParams, it.getParameterTypes());
+                }
+            }
+            throw new DependencyException("No method " + methodName + " found to invoke on " + toInvokeOn.getClass().getName());
+            
+        } catch (Exception e) {
+            throw new DependencyException("Error while invoking method " + methodName + ": " + e.getMessage());
+        }
+    }
+
     public Object invokeMethod(Object toInvokeOn, String methodName, Class... paramTypes) throws DependencyException {
         return this.invokeMethod(toInvokeOn, methodName, new ArrayList<Object>(), paramTypes);
     }
 
+    /**
+     * This method allows to invoke special method with similar signature
+     * provided by name and parameter types
+     */
     public Object invokeMethod(Object toInvokeOn, String methodName, ArrayList<Object> extraParams, Class... paramTypes) throws DependencyException {
 
         try {
@@ -47,15 +79,25 @@ public class Instantiator {
 
             ArrayList methodParams = new ArrayList<Object>();
 
+            int currentAddinationalParam = 0;
+
             for (Class it : paramTypes) {
                 try {
                     methodParams.add(this.sc.get(it.getCanonicalName()));
                 } catch (DependencyException e) {
-                    // skip not found errors because there is extraParams
+                    if (extraParams.get(currentAddinationalParam).getClass().getCanonicalName().equals(it.getCanonicalName())) {
+
+                        methodParams.add(extraParams.get(currentAddinationalParam));
+                        currentAddinationalParam++;
+                    } else {
+                        throw new DependencyException("Error invoking a method: no proper resource found in service container nor provided as external param");
+                    }
                 }
             }
 
-            methodParams.addAll(extraParams);
+            for (int i = currentAddinationalParam; i < extraParams.size(); i++) {
+                methodParams.add(extraParams.get(i));
+            }
 
             return method.invoke(toInvokeOn, methodParams.toArray());
         } catch (Exception ex) {

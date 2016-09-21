@@ -13,8 +13,8 @@ public class IndexController {
     }
     
     
-    public String cabinetAction(Request request, String username) {
-        return "Hi, "+username+", your ip is "+request.getRemoteAdress();
+    public String cabinetAction(Request request, Database db, String username) {
+        return "Hi, "+username+", your ip is "+request.getRemoteAdress()+" lastInsertId :"+db.getLastInsertId();
     }
     
 }
