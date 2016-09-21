@@ -1,9 +1,8 @@
 package com.dot5enko.test;
 
-import com.dot5enko.di.Resource;
+import com.dot5enko.di.Instantiator;
 import com.dot5enko.di.ServiceContainer;
-import com.dot5enko.test.mockup.FormatHelper;
-import com.dot5enko.test.mockup.Request;
+import com.dot5enko.test.mockup.*;
 
 /**
  *
@@ -14,22 +13,27 @@ public class Main {
     public static void main(String[] args) {
 
         ServiceContainer sc = ServiceContainer.getInstance();
-        
-        sc.addResource(Request.class,new Resource());
-        
+
+        sc.addResource(Request.class, new Request());
+
         sc.addLazyResource(FormatHelper.class, () -> {
             return new FormatHelper();
         });
-        
-        
-        
+
+        Instantiator manager = new Instantiator();
+
         try {
             
-            System.out.println(sc.get(Request.class));
+            // Controller injection example 
+            IndexController controller = (IndexController) manager.instantiate(IndexController.class);
             
-            FormatHelper fh = (FormatHelper)sc.get(FormatHelper.class);
+            // service container example
+            System.out.println(controller.indexAction((Request)sc.get("com.dot5enko.test.mockup.Request")));
             
-            System.out.println(fh.toUpper("hello world"));
+            // getter setter injection example
+//            manager.invokeMethod(controller,"indexAction");
+            
+
         } catch (Exception e) {
             e.printStackTrace();
         }
