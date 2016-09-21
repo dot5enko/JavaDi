@@ -12,4 +12,9 @@ public class IndexController {
         return "Hello ,"+request.getUserAgent()+this.formatter.toUpper("This is the uppercased greeting from ")+"IndexController.indexAction";
     }
     
+    
+    public String cabinetAction(Request request, String username) {
+        return "Hi, "+username+", your ip is "+request.getRemoteAdress();
+    }
+    
 }
