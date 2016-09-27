@@ -32,9 +32,10 @@ public class Main {
             return new PostgresDatabase();
         },PostgresDatabase.class);
         
-        sc.addLazyService("Logger",() -> {
+        sc.addNotSharedService("different_logger",() -> {
             return manager.instantiate(Logger.class);
         },Logger.class);
+        
 
         try {
 

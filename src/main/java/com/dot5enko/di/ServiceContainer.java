@@ -54,6 +54,17 @@ public class ServiceContainer {
         addToMapping(name,clazz);
        
     }
+    
+    public void addNotSharedService(String name, DelayedResourceHandler h,Class<?> clazz) {
+    
+        Service newResource = new Service();
+        newResource.handler = h;
+        newResource.shared = false;
+        
+        this.objects.put(name, newResource);
+        addToMapping(name,clazz);
+    }
+    
 
     public void addService(String name, Object resource) {
         Service newResource = new Service();
