@@ -10,8 +10,18 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 
 public class Instantiator {
-
+    
+    private static Instantiator instance = null;
     private ServiceContainer sc = ServiceContainer.getInstance();
+    
+    public static Instantiator getInstance() {
+        if (instance == null) {
+            instance = new Instantiator();
+        }
+        return instance;
+    }
+    
+    private Instantiator() {}
 
     public Object instantiate(Class<?> toInstantiate) throws DependencyException {
 

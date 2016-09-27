@@ -1,5 +1,6 @@
 package com.dot5enko.test;
 
+import com.dot5enko.di.AutomaticResourceHandler;
 import com.dot5enko.di.Instantiator;
 import com.dot5enko.di.ServiceContainer;
 import com.dot5enko.test.mockup.*;
@@ -14,7 +15,7 @@ public class Main {
     public static void main(String[] args) {
 
         ServiceContainer sc = ServiceContainer.getInstance();
-        Instantiator manager = new Instantiator();
+        Instantiator manager = Instantiator.getInstance();
 
         
         // adding resources to service container
@@ -32,9 +33,7 @@ public class Main {
             return new PostgresDatabase();
         },PostgresDatabase.class);
         
-        sc.addNotSharedService("different_logger",() -> {
-            return manager.instantiate(Logger.class);
-        },Logger.class);
+        sc.addNotSharedService("different_logger",new AutomaticResourceHandler(Logger.class),Logger.class);
         
 
         try {
