@@ -18,31 +18,28 @@ public class Main {
 
         
         // adding resources to service container
-        
-        sc.addResource(Request.class, new Request());
+        sc.addService("Request", new Request());
 
-        sc.addLazyResource(FormatHelper.class, () -> {
+        sc.addLazyService("formatHelper", () -> {
             return new FormatHelper();
-        });
+        },FormatHelper.class);
         
-        sc.addLazyResource(MysqlDatabase.class, () -> {
+        sc.addLazyService("Mysql", () -> {
             return new MysqlDatabase();
-        });
+        },MysqlDatabase.class);
         
-        sc.addLazyResource(PostgresDatabase.class, () -> {
+        sc.addLazyService("db", () -> {
             return new PostgresDatabase();
-        });
+        },PostgresDatabase.class);
         
-        sc.addLazyResource(Logger.class,() -> {
+        sc.addLazyService("Logger",() -> {
             return manager.instantiate(Logger.class);
-        });
-        
+        },Logger.class);
 
         try {
 
             // Constructor injection example   
             IndexController controller = (IndexController) manager.instantiate(IndexController.class);
-
             
             ArrayList cabinetParams = new ArrayList<Object>();
             cabinetParams.add(new String("Sergiy"));

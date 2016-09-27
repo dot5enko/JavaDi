@@ -4,7 +4,7 @@ import com.dot5enko.di.annotation.InjectInstance;
 
 public class Logger {
     
-    @InjectInstance("com.dot5enko.test.mockup.MysqlDatabase")
+    @InjectInstance("db")
     DatabaseInterface db; 
     
     public void error(String x) {

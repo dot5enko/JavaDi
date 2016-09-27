@@ -10,12 +10,12 @@ public class IndexController {
     
     @Inject
     FormatHelper formatter;
-    
+
     public String indexAction(Request request) {
         return "Hello ," + request.getUserAgent() + this.formatter.toUpper("This is the uppercased greeting from ") + "IndexController.indexAction";
     }
     
-    public String cabinetAction(Request request,@InjectInstance("com.dot5enko.test.mockup.PostgresDatabase") DatabaseInterface db, String username) {
+    public String cabinetAction(Request request, @InjectInstance("db") DatabaseInterface db, String username) {
         
         this.logger.log("cabinet action executed");
         

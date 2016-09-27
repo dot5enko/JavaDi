@@ -23,7 +23,7 @@ public class Instantiator {
             ArrayList<Object> constructorParams = new ArrayList<Object>();
 
             for (Parameter it : cc[0].getParameters()) {
-                constructorParams.add(this.sc.get(it.getType().getCanonicalName()));
+                constructorParams.add(this.sc.get(sc.lookupServiceName(it.getType().getCanonicalName())));
             }
            
 
@@ -37,7 +37,7 @@ public class Instantiator {
                     //System.out.println("trying to inject data into "+toInstantiate.getName()+"::"+it.getName());
 
                     it.setAccessible(true);
-                    it.set(newInstance, sc.get(it.getType()));
+                    it.set(newInstance, sc.get(sc.lookupServiceName(it.getType().getCanonicalName())));
                 } else {
                     InjectInstance anInjectInterface = it.getAnnotation(InjectInstance.class);
                     if (anInjectInterface != null) {
@@ -111,7 +111,7 @@ public class Instantiator {
                     methodParams.add(sc.get(anInjectInterface.value()));
                 } else {
                     try {
-                        methodParams.add(this.sc.get(it.getCanonicalName()));
+                        methodParams.add(this.sc.get(sc.lookupServiceName(it.getCanonicalName())));
                     } catch (DependencyException e) {
                         if (extraParams.get(currentAddinationalParam).getClass().getCanonicalName().equals(it.getCanonicalName())) {
 

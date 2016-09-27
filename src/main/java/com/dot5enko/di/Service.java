@@ -4,7 +4,7 @@ package com.dot5enko.di;
  *
  * @author serhio
  */
-public class Resource {
+public class Service {
 
     public Object object;
     public DelayedResourceHandler handler = null;
