@@ -21,7 +21,7 @@ public class IndexController {
         
         db.executeQuery("INSERT INTO some_log_table SET time = " + request.getRequestTime().getTime() + " AND ua = " + request.getUserAgent());
         
-        return "Hi, " + username + ", your ip is " + request.getRemoteAdress() + " lastInsertId :";
+        return "Hi, " + username + ", your ip is " + request.getRemoteAdress() + " requestTIme  :"+request.getRequestTime();
     }
     
 }

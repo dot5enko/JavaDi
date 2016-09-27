@@ -47,7 +47,7 @@ public class ServiceContainer {
     
     
     public void addLazyService(String name, DelayedResourceHandler h, Class<?> clazz) {
-        Service newResource = new Service();
+        Service newResource = new Service(name);
         newResource.handler = h;
 
         this.objects.put(name, newResource);
@@ -55,26 +55,43 @@ public class ServiceContainer {
        
     }
     
+    public void addLazyService(String name,Class<?> clazz) {
+        Service s = new Service(name);
+        s.handler = new AutomaticResourceHandler(clazz);
+        objects.put(name, s);
+        addToMapping(name,clazz);
+    }
+    
     public void addNotSharedService(String name, DelayedResourceHandler h,Class<?> clazz) {
     
-        Service newResource = new Service();
+        Service newResource = new Service(name);
         newResource.handler = h;
         newResource.shared = false;
         
         this.objects.put(name, newResource);
         addToMapping(name,clazz);
     }
+    public void addNotSharedService(String name, Class<?> clazz) {
+    
+        Service newResource = new Service(name);
+        newResource.handler = new AutomaticResourceHandler(clazz);
+        newResource.shared = false;
+        
+        this.objects.put(name, newResource);
+        addToMapping(name,clazz);
+    }
+    
     
 
     public void addService(String name, Object resource) {
-        Service newResource = new Service();
+        Service newResource = new Service(name);
         newResource.object = resource;
         
         this.objects.put(name, newResource);
         addToMapping(name,resource.getClass());
     }
 
-    public Object get(String canonicalName) throws DependencyException {
+    public Object get(String canonicalName) throws DependencyException {        
         if (this.objects.containsKey(canonicalName)) {
             return this.objects.get(canonicalName).getAllocator();
         } else {
