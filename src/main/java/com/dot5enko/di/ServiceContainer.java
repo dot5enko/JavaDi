@@ -1,7 +1,17 @@
 package com.dot5enko.di;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  *
@@ -37,12 +47,12 @@ public class ServiceContainer {
         aliases.add(alias);
     }
     
-    String lookupServiceName(String canonicalClassName){
+    String lookupServiceName(String canonicalClassName) throws DependencyException{
         ArrayList<String> list =  canonicalMapping.get(canonicalClassName);
         if (list != null) {
             return list.get(0); // get the first element in list
         } 
-        return null;
+        throw new DependencyException(canonicalClassName+" is not in service container now");
     }
     
     
@@ -81,7 +91,23 @@ public class ServiceContainer {
         addToMapping(name,clazz);
     }
     
-    
+    private void addRawResource(String name,Class<?> clazz,boolean lazy,boolean shared) throws DependencyException {
+        Service newResource = new Service(name);
+        if (lazy) {
+            newResource.handler = new AutomaticResourceHandler(clazz);
+        } else {
+            try {
+                newResource.object = Instantiator.getInstance().instantiate(clazz);
+            } catch (DependencyException ex) {
+                throw new DependencyException("Can't instantiate resource "+name+"("+clazz.getName()+")");
+            }
+        }
+        
+        newResource.shared = shared;
+        
+        this.objects.put(name, newResource);
+        addToMapping(name,clazz);
+    }
 
     public void addService(String name, Object resource) {
         Service newResource = new Service(name);
@@ -98,5 +124,43 @@ public class ServiceContainer {
             throw new DependencyException("No such object (" + canonicalName + ") in dependency injector container");
         }
     }
+    
+    public void initializeWithConfig(String path) throws DependencyException {
+
+        try {
+            JsonFactory factory = new JsonFactory();
+
+            ObjectMapper mapper = new ObjectMapper(factory);
+            JsonNode rootNode = mapper.readTree(new File(path));
+
+            Iterator<Map.Entry<String, JsonNode>> fieldsIterator = rootNode.fields();
+            while (fieldsIterator.hasNext()) {
+
+                Map.Entry<String, JsonNode> cur = fieldsIterator.next();
+                
+                
+                JsonNode field = cur.getValue();
+                String name = cur.getKey();
+                
+                
+                // move next two initialization to function
+                boolean shared = true;
+                if (field.has("shared")) {
+                    shared = field.get("shared").asBoolean();
+                }
+                
+                boolean lazy = true;
+                if (field.has("lazy")) {
+                    lazy = field.get("lazy").asBoolean();
+                }
+                
+                this.addRawResource(name, Class.forName(field.get("class").asText()), lazy, shared);
+            }
+        } catch (Exception ex) {
+            throw new DependencyException("Error initializing service container from configuration file: "+ex.getMessage());
+        }
+
+    }
+    
 
 }

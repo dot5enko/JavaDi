@@ -8,11 +8,8 @@ public class IndexController {
     @Inject
     private Logger logger;
     
-    @Inject
-    FormatHelper formatter;
-
-    public String indexAction(Request request) {
-        return "Hello ," + request.getUserAgent() + this.formatter.toUpper("This is the uppercased greeting from ") + "IndexController.indexAction";
+    public IndexController(Request x){
+        x.getRequestTime();
     }
     
     public String cabinetAction(Request request, @InjectInstance("db") DatabaseInterface db, String username) {

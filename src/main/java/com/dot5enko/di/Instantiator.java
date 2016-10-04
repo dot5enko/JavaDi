@@ -5,40 +5,45 @@ import com.dot5enko.di.annotation.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Instantiator {
-    
+
     private static Instantiator instance = null;
     private ServiceContainer sc = ServiceContainer.getInstance();
-    
+
     public static Instantiator getInstance() {
         if (instance == null) {
             instance = new Instantiator();
         }
         return instance;
     }
-    
-    private Instantiator() {}
+
+    private Instantiator() {
+    }
 
     public Object instantiate(Class<?> toInstantiate) throws DependencyException {
-
         try {
 
             Class c = Class.forName(toInstantiate.getName());
             Constructor[] cc = c.getConstructors();
 
             ArrayList<Object> constructorParams = new ArrayList<Object>();
+            Object newInstance = null;
+            try {
+                for (Parameter it : cc[0].getParameters()) {
+                    constructorParams.add(this.sc.get(sc.lookupServiceName(it.getType().getCanonicalName())));
+                }
 
-            for (Parameter it : cc[0].getParameters()) {
-                constructorParams.add(this.sc.get(sc.lookupServiceName(it.getType().getCanonicalName())));
+                newInstance = cc[0].newInstance(constructorParams.toArray());
+            } catch (Exception instExc) {
+                throw new DependencyException("Can't find dependencies for constructor: " + instExc.getMessage());
             }
-           
-
-            Object newInstance = cc[0].newInstance(constructorParams.toArray());
-
             // TODO: catch here sub exceptions
             for (Field it : c.getDeclaredFields()) {
                 Annotation[] fieldAnnotations = it.getAnnotations();
@@ -84,7 +89,7 @@ public class Instantiator {
 
         for (Method it : methods) {
             if (it.getName().equals(methodName)) {
-                
+
                 return this.invokeMethod(toInvokeOn, methodName, methodAddParams, it.getParameterTypes());
             }
         }
@@ -128,7 +133,7 @@ public class Instantiator {
                             methodParams.add(extraParams.get(currentAddinationalParam));
                             currentAddinationalParam++;
                         } else {
-                            throw new DependencyException("no proper resource found in service container nor provided as external param for "+ parameter.getType().getSimpleName());
+                            throw new DependencyException("no proper resource found in service container nor provided as external param for " + parameter.getType().getSimpleName());
                         }
                     }
                 }
@@ -140,7 +145,7 @@ public class Instantiator {
 
             return method.invoke(toInvokeOn, methodParams.toArray());
         } catch (Exception ex) {
-            throw new DependencyException("Error while trying to invoke method "+toInvokeOn.getClass().getSimpleName()+"." + methodName + ": " + ex.getMessage());
+            throw new DependencyException("Error while trying to invoke method " + toInvokeOn.getClass().getSimpleName() + "." + methodName + ": " + ex.getMessage());
         }
     }
 

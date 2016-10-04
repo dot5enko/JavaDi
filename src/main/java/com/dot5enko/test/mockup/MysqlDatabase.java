@@ -6,6 +6,7 @@ public class MysqlDatabase implements DatabaseInterface {
     
     public void executeQuery(String query) {
         // this method does nothing
+        System.out.println("MYSQL:"+query);
         this.insertId++;
     }
     

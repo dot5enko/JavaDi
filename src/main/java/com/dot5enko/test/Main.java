@@ -1,6 +1,5 @@
 package com.dot5enko.test;
 
-import com.dot5enko.di.AutomaticResourceHandler;
 import com.dot5enko.di.DependencyException;
 import com.dot5enko.di.Instantiator;
 import com.dot5enko.di.ServiceContainer;
@@ -17,15 +16,8 @@ public class Main {
 
         ServiceContainer sc = ServiceContainer.getInstance();
         Instantiator manager = Instantiator.getInstance();
-
-        // adding resources to service container
-        sc.addLazyService("formatHelper", FormatHelper.class);
-        sc.addLazyService("Mysql", MysqlDatabase.class);
-        sc.addLazyService("db", PostgresDatabase.class);
-
-        sc.addNotSharedService("Request", Request.class);
-
-        sc.addService("logger", manager.instantiate(Logger.class));
+        
+        sc.initializeWithConfig("/Users/serhio/NetBeansProjects/di/src/main/java/com/dot5enko/test/config/services.json");
 
         try {
 
@@ -38,7 +30,7 @@ public class Main {
             // getter setter example
             System.out.println(manager.invokeMethod(controller, "cabinetAction", cabinetParams));
 
-            Thread.sleep(1000);
+            Thread.sleep(2000);
 
             System.out.println(manager.invokeMethod(controller, "cabinetAction", cabinetParams));
 
