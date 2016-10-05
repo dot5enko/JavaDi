@@ -1,7 +1,12 @@
 package com.dot5enko.test.mockup;
 
+import com.dot5enko.di.annotation.Service;
+import com.dot5enko.di.annotation.service.Lazy;
+import com.dot5enko.di.annotation.service.Shared;
 import java.util.Date;
 
+@Service
+@Shared(false)
 public class Request {
     
     private Date rTime;

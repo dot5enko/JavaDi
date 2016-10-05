@@ -5,12 +5,9 @@ import com.dot5enko.di.annotation.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Instantiator {
 
@@ -39,7 +36,6 @@ public class Instantiator {
                 for (Parameter it : cc[0].getParameters()) {
                     constructorParams.add(this.sc.get(sc.lookupServiceName(it.getType().getCanonicalName())));
                 }
-
                 newInstance = cc[0].newInstance(constructorParams.toArray());
             } catch (Exception instExc) {
                 throw new DependencyException("Can't find dependencies for constructor: " + instExc.getMessage());

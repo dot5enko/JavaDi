@@ -1,15 +1,11 @@
 {
-    "resources": {
+    "services": {
         "logger": {
             "class": "com.dot5enko.test.mockup.Logger"
         },
         "formatter": {
             "class": "com.dot5enko.test.mockup.FormatHelper",
             "lazy": false
-        },
-        "request": {
-            "class": "com.dot5enko.test.mockup.Request",
-            "shared": false
         },
         "db": {
             "class": "com.dot5enko.test.mockup.MysqlDatabase"

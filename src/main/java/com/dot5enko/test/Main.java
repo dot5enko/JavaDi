@@ -1,5 +1,6 @@
 package com.dot5enko.test;
 
+import com.dot5enko.di.ClassFinder;
 import com.dot5enko.di.DependencyException;
 import com.dot5enko.di.Instantiator;
 import com.dot5enko.di.ServiceContainer;

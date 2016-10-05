@@ -1,5 +1,7 @@
 package com.dot5enko.test.mockup;
 
+import com.dot5enko.di.annotation.Service;
+
 public class MysqlDatabase implements DatabaseInterface {
     
     private int insertId = 0;
