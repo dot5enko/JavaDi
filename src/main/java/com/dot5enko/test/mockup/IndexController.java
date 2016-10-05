@@ -8,17 +8,17 @@ public class IndexController {
     @Inject
     private Logger logger;
     
-    public IndexController(Request x){
+    public IndexController(@InjectInstance("req") RequestInterface x){
         x.getRequestTime();
     }
     
-    public String cabinetAction(Request request, @InjectInstance("db") DatabaseInterface db, String username) {
+    public String cabinetAction(@InjectInstance("req") RequestInterface request, @InjectInstance("db") DatabaseInterface db, String username) {
         
         this.logger.log("cabinet action executed");
         
-        db.executeQuery("INSERT INTO some_log_table SET time = " + request.getRequestTime().getTime() + " AND ua = " + request.getUserAgent());
+        db.executeQuery("INSERT INTO some_log_table SET time = " + request.getRequestTime().getTime() + " AND u");
         
-        return "Hi, " + username + ", your ip is " + request.getRemoteAdress() + " requestTIme  :"+request.getRequestTime();
+        return "Hi,"; //" + username + ", your ip is " + request.getRemoteAdress() + " requestTIme  :"+request.getRequestTime();
     }
     
 }

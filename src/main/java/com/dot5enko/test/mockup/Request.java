@@ -6,8 +6,8 @@ import com.dot5enko.di.annotation.service.Lazy;
 import com.dot5enko.di.annotation.service.Shared;
 import java.util.Date;
 
-@Service
-public class Request {
+@Service("req")
+public class Request implements RequestInterface{
     
     @Inject
     private Logger log;

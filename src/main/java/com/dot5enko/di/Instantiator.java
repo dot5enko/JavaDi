@@ -34,7 +34,12 @@ public class Instantiator {
             Object newInstance = null;
             try {
                 for (Parameter it : cc[0].getParameters()) {
-                    constructorParams.add(this.sc.get(sc.lookupServiceName(it.getType().getCanonicalName())));
+                    if (it.isAnnotationPresent(InjectInstance.class)) {
+                        InjectInstance anInject = it.getAnnotation(InjectInstance.class);
+                        constructorParams.add(this.sc.get(anInject.value()));
+                    } else {
+                        constructorParams.add(this.sc.get(sc.lookupServiceName(it.getType().getCanonicalName())));
+                    }
                 }
                 newInstance = cc[0].newInstance(constructorParams.toArray());
             } catch (Exception instExc) {
