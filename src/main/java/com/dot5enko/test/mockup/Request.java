@@ -1,13 +1,16 @@
 package com.dot5enko.test.mockup;
 
+import com.dot5enko.di.annotation.Inject;
 import com.dot5enko.di.annotation.Service;
 import com.dot5enko.di.annotation.service.Lazy;
 import com.dot5enko.di.annotation.service.Shared;
 import java.util.Date;
 
 @Service
-@Shared(false)
 public class Request {
+    
+    @Inject
+    private Logger log;
     
     private Date rTime;
     private String remoteAddr = "127.0.0.1";
