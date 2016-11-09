@@ -24,6 +24,39 @@ public class Instantiator {
     private Instantiator() {
     }
 
+    public Object injectInternalDependencies(Object newInstance) throws Exception {
+
+        Class c = newInstance.getClass();
+        // TODO: catch here sub exceptions
+
+        Class current = c;
+        while (current != null) {
+            for (Field it : current.getDeclaredFields()) {
+                Annotation[] fieldAnnotations = it.getAnnotations();
+                Annotation anInject = it.getAnnotation(Inject.class);
+                if (anInject != null) {
+//                    System.out.println("trying to inject data into " + newInstance.getClass().getSimpleName() + "::" + it.getName());
+
+                    it.setAccessible(true);
+                    it.set(newInstance, sc.get(sc.lookupServiceName(it.getType().getCanonicalName())));
+                } else {
+                    InjectInstance anInjectInterface = it.getAnnotation(InjectInstance.class);
+                    if (anInjectInterface != null) {
+                        //System.out.println("trying to inject interface data into "+toInstantiate.getName()+"::"+it.getName());
+
+                        it.setAccessible(true);
+                        it.set(newInstance, sc.get(anInjectInterface.value()));
+                    }
+                }
+
+            }
+            current = current.getSuperclass();
+        }
+        
+        return newInstance;
+
+    }
+
     public Object instantiate(Class<?> toInstantiate) throws DependencyException {
         try {
 
@@ -45,28 +78,9 @@ public class Instantiator {
             } catch (Exception instExc) {
                 throw new DependencyException("Can't find dependencies for constructor: " + instExc.getMessage());
             }
+
             // TODO: catch here sub exceptions
-            for (Field it : c.getDeclaredFields()) {
-                Annotation[] fieldAnnotations = it.getAnnotations();
-                Annotation anInject = it.getAnnotation(Inject.class);
-                if (anInject != null) {
-                    //System.out.println("trying to inject data into "+toInstantiate.getName()+"::"+it.getName());
-
-                    it.setAccessible(true);
-                    it.set(newInstance, sc.get(sc.lookupServiceName(it.getType().getCanonicalName())));
-                } else {
-                    InjectInstance anInjectInterface = it.getAnnotation(InjectInstance.class);
-                    if (anInjectInterface != null) {
-                        //System.out.println("trying to inject interface data into "+toInstantiate.getName()+"::"+it.getName());
-
-                        it.setAccessible(true);
-                        it.set(newInstance, sc.get(anInjectInterface.value()));
-                    }
-                }
-
-            }
-
-            return newInstance;
+            return this.injectInternalDependencies(newInstance);
 
         } catch (Exception ex) {
             throw new DependencyException("Error while trying to instantiate " + toInstantiate.getName() + ": " + ex.getMessage());
@@ -108,10 +122,21 @@ public class Instantiator {
     public Object invokeMethod(Object toInvokeOn, String methodName, ArrayList<Object> extraParams, Class... paramTypes) throws DependencyException {
 
         try {
-
             Class c = toInvokeOn.getClass();
-            Method method = c.getMethod(methodName, paramTypes);
-
+            
+            // cache class methods to optimize
+            Method[] methods = c.getMethods();
+            Method method = null;
+            
+            // find method by name, not parameters
+            // TODO check for another methods with such name, if such exists throw exception
+            for (Method it: methods) {
+                if (it.getName().equals(methodName)) {
+                    method = it;
+                    break;
+                }
+            }
+            
             ArrayList methodParams = new ArrayList<Object>();
 
             int currentAddinationalParam = 0;
@@ -128,9 +153,8 @@ public class Instantiator {
                 } else {
                     try {
                         methodParams.add(this.sc.get(sc.lookupServiceName(it.getCanonicalName())));
-                    } catch (DependencyException e) {
-                        if (extraParams.get(currentAddinationalParam).getClass().getCanonicalName().equals(it.getCanonicalName())) {
-
+                    } catch (DependencyException e) { 
+                        if (extraParams.size() > currentAddinationalParam && extraParams.get(currentAddinationalParam).getClass().getCanonicalName().equals(it.getCanonicalName())) {
                             methodParams.add(extraParams.get(currentAddinationalParam));
                             currentAddinationalParam++;
                         } else {
@@ -146,6 +170,7 @@ public class Instantiator {
 
             return method.invoke(toInvokeOn, methodParams.toArray());
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw new DependencyException("Error while trying to invoke method " + toInvokeOn.getClass().getSimpleName() + "." + methodName + ": " + ex.getMessage());
         }
     }

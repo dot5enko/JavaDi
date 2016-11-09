@@ -1,5 +1,8 @@
 {
     "port": 8003,
+    "app": {
+        "controllersPackage": "com.dot5enko.test.controllers"
+    },
     "db": {
         "port": "catchmetech.com",
         "port": 27017
@@ -7,7 +10,7 @@
     "di": {
         "services": {
             "logger": {
-                "class": "com.dot5enko.test.mockup.Logger"
+                "class": "com.dot5enko.test.mockup.StdOutLogger"
             },
             "formatter": {
                 "class": "com.dot5enko.test.mockup.FormatHelper",
