@@ -1,14 +1,13 @@
 package com.dot5enko.di;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.bson.Document;
 
 /**
  *
@@ -144,72 +143,46 @@ public class ServiceContainer {
             try {
                 this.addRawResource(serviceName, clazz, lazy, shared);
             } catch (Exception e) {
-                throw new DependencyException("Can't add service for class "+clazz.getName()+" on autoloading");
+                throw new DependencyException("Can't add service for class " + clazz.getName() + " on autoloading");
             }
-            
+
             return true;
         }
 
         return false;
     }
 
-    public void initializeWithConfig(String path) throws DependencyException {
+    public void initializeWithConfig(Document config) throws DependencyException {
 
-        try {
-            JsonFactory factory = new JsonFactory();
+        Set<Entry<String, Object>> entrySet = config.get("services", Document.class).entrySet();
 
-            ObjectMapper mapper = new ObjectMapper(factory);
-            JsonNode rootNode = mapper.readTree(new File(path));
+        for (Entry<String, Object> cur : entrySet) {
+            Document field = (Document) cur.getValue();
+            String name = cur.getKey();
 
-            Iterator<Map.Entry<String, JsonNode>> servicesFieldsIterator = null;
-            Iterator<Map.Entry<String, JsonNode>> fieldsIteratorTop = rootNode.fields();
-
-            while (fieldsIteratorTop.hasNext()) {
-
-                Map.Entry<String, JsonNode> curTop = fieldsIteratorTop.next();
-
-                if (curTop.getKey().equals("services")) {
-                    servicesFieldsIterator = curTop.getValue().fields();
-                }
-                if (curTop.getKey().equals("autoload")) {
-                    Iterator<JsonNode> autoloadPackagesIterator = curTop.getValue().elements();
-                    while (autoloadPackagesIterator.hasNext()) {
-                        String packageName = autoloadPackagesIterator.next().asText();
-                        for (Class<?> it : ClassFinder.find(packageName)) {
-                            this.addIfresource(it);
-                        }
-                    }
-                }
+            // move next two initialization to function
+            boolean shared = true;
+            if (field.containsKey("shared")) {
+                shared = field.getBoolean("shared");
             }
 
-            // initialize resources
-            if (servicesFieldsIterator != null) {
-                while (servicesFieldsIterator.hasNext()) {
-
-                    Map.Entry<String, JsonNode> cur = servicesFieldsIterator.next();
-
-                    JsonNode field = cur.getValue();
-                    String name = cur.getKey();
-
-                    // move next two initialization to function
-                    boolean shared = true;
-                    if (field.has("shared")) {
-                        shared = field.get("shared").asBoolean();
-                    }
-
-                    boolean lazy = true;
-                    if (field.has("lazy")) {
-                        lazy = field.get("lazy").asBoolean();
-                    }
-
-                    this.addRawResource(name, Class.forName(field.get("class").asText()), lazy, shared);
-                }
+            boolean lazy = true;
+            if (field.containsKey("lazy")) {
+                lazy = field.getBoolean("lazy");
             }
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            System.exit(0);
-            throw new DependencyException("Error initializing service container from configuration file: " + ex.getMessage());
+            try {
+                this.addRawResource(name, Class.forName(field.getString("class")), lazy, shared);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(ServiceContainer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        List<String> autoloadPackages = config.get("autoload", List.class);
+        for (String packageName : autoloadPackages) {
+            for (Class<?> it : ClassFinder.find(packageName)) {
+                this.addIfresource(it);
+            }
         }
 
     }

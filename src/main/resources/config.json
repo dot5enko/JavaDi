@@ -1,0 +1,25 @@
+{
+    "port": 8003,
+    "db": {
+        "port": "catchmetech.com",
+        "port": 27017
+    },
+    "di": {
+        "services": {
+            "logger": {
+                "class": "com.dot5enko.test.mockup.Logger"
+            },
+            "formatter": {
+                "class": "com.dot5enko.test.mockup.FormatHelper",
+                "lazy": false
+            },
+            "db": {
+                "class": "com.dot5enko.test.mockup.MysqlDatabase"
+            }
+        },
+        "autoload": [
+            "com.dot5enko.test.mockup"
+        ]
+    }
+
+}

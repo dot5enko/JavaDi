@@ -1,11 +1,16 @@
 package com.dot5enko.test;
 
-import com.dot5enko.di.ClassFinder;
+import com.dot5enko.FileHelper;
 import com.dot5enko.di.DependencyException;
 import com.dot5enko.di.Instantiator;
 import com.dot5enko.di.ServiceContainer;
+import com.dot5enko.server.Response;
+import com.dot5enko.server.Server;
+import com.dot5enko.server.protocols.http.HttpHandler;
+import com.dot5enko.server.protocols.http.HttpResponse;
 import com.dot5enko.test.mockup.*;
 import java.util.ArrayList;
+import org.bson.Document;
 
 /**
  *
@@ -17,8 +22,22 @@ public class Main {
 
         ServiceContainer sc = ServiceContainer.getInstance();
         Instantiator manager = Instantiator.getInstance();
-        
-        sc.initializeWithConfig("/Users/serhio/NetBeansProjects/di/src/main/java/com/dot5enko/test/config/services.json");
+
+        Document config = Document.parse(FileHelper.getFile("config.json"));
+
+        sc.initializeWithConfig(config.get("di", Document.class));
+
+        Server httpServer = new Server(config, () -> {
+            return new HttpHandler() {
+                @Override
+                protected Response action(com.dot5enko.server.Request req) {
+                    return new HttpResponse().setContent("hello world");
+                }
+            };
+        }, sc);
+        httpServer.start(() -> {
+            System.out.println("server started");
+        });
 
         try {
 
