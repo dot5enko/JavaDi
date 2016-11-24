@@ -1,5 +1,7 @@
 package com.dot5enko.di;
 
+import org.bson.Document;
+
 public class AutomaticResourceHandler implements DelayedResourceHandler {
 
     private Class<?> clazz;
@@ -9,8 +11,8 @@ public class AutomaticResourceHandler implements DelayedResourceHandler {
     }
     
     @Override
-    public Object initialize() throws DependencyException {
-        return Instantiator.getInstance().instantiate(clazz);
+    public Object initialize(Document options) throws DependencyException {
+        return Instantiator.getInstance().instantiate(clazz,options);
     }
 
 }

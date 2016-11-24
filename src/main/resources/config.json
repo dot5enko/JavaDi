@@ -3,10 +3,6 @@
     "app": {
         "controllersPackage": "com.dot5enko.test.controllers"
     },
-    "db": {
-        "port": "catchmetech.com",
-        "port": 27017
-    },
     "di": {
         "services": {
             "logger": {
@@ -16,12 +12,24 @@
                 "class": "com.dot5enko.test.mockup.FormatHelper",
                 "lazy": false
             },
-            "db": {
-                "class": "com.dot5enko.test.mockup.MysqlDatabase"
+            "database": {
+                "class": "com.dot5enko.database.MySQLProvider",
+                "options": {
+                    "dsn": "jdbc:mysql://127.0.0.1/junior?useLegacyDatetimeCode=false&serverTimezone=Europe/Kiev",
+                    "user": "root",
+                    "password": "root"
+                }
+            },
+            "dao": {
+                "class": "com.dot5enko.database.Dao"
             }
         },
+        "initialize": [
+            "com.dot5enko.database.DaoObject"
+        ],
         "autoload": [
-            "com.dot5enko.test.mockup"
+            "com.dot5enko.test.mockup",
+            "com.dot5enko.database"
         ]
     }
 

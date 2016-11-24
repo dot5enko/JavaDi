@@ -3,7 +3,7 @@ package com.dot5enko.test.mockup;
 import com.dot5enko.di.annotation.InjectInstance;
 
 public class StdOutLogger implements LogInterface {
-
+    
     @InjectInstance("db")
     DatabaseInterface db;
 

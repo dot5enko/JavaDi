@@ -6,8 +6,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import org.bson.Document;
 
 public class Instantiator {
 
@@ -22,6 +24,27 @@ public class Instantiator {
     }
 
     private Instantiator() {
+    }
+
+    public void injectStaticDependencies(Class<?> current) throws Exception {
+        while (current != null) {
+            for (Field it : current.getDeclaredFields()) {
+                if (Modifier.isStatic(it.getModifiers())) {
+                    Annotation anInject = it.getAnnotation(Inject.class);
+                    if (anInject != null) {
+                        it.setAccessible(true);
+                        it.set(null, sc.get(sc.lookupServiceName(it.getType().getCanonicalName())));
+                    } else {
+                        InjectInstance anInjectInterface = it.getAnnotation(InjectInstance.class);
+                        if (anInjectInterface != null) {
+                            it.setAccessible(true);
+                            it.set(null, sc.get(anInjectInterface.value()));
+                        }
+                    }
+                }
+            }
+            current = current.getSuperclass();
+        }
     }
 
     public Object injectInternalDependencies(Object newInstance) throws Exception {
@@ -52,15 +75,45 @@ public class Instantiator {
             }
             current = current.getSuperclass();
         }
-        
+
         return newInstance;
 
     }
 
     public Object instantiate(Class<?> toInstantiate) throws DependencyException {
-        try {
+        return this.instantiate(toInstantiate, null);
+    }
 
+    static class ExceptionHandler {
+
+        public static String unfoldMessage(Throwable e) {
+
+            StringBuilder result = new StringBuilder(e.getMessage());
+
+            Throwable currentE = e.getCause();
+
+            while (currentE != null) {
+                result.append("\n Caused by ").append(currentE.getClass().getCanonicalName()).append(" ").append(currentE.getMessage());
+                currentE = currentE.getCause();
+            }
+
+            return result.toString();
+        }
+    }
+
+    public Object instantiate(Class<?> toInstantiate, Document options) throws DependencyException {
+        try {
             Class c = Class.forName(toInstantiate.getName());
+
+            try {
+                Method setOptsMethod = c.getMethod("setOptions", Document.class);
+                setOptsMethod.setAccessible(true);
+
+                setOptsMethod.invoke(null, options);
+            } catch (NoSuchMethodException e) {
+//                System.out.println("setOptions is not find on service "+toInstantiate.getCanonicalName());
+            }
+
             Constructor[] cc = c.getConstructors();
 
             ArrayList<Object> constructorParams = new ArrayList<Object>();
@@ -76,7 +129,7 @@ public class Instantiator {
                 }
                 newInstance = cc[0].newInstance(constructorParams.toArray());
             } catch (Exception instExc) {
-                throw new DependencyException("Can't find dependencies for constructor: " + instExc.getMessage());
+                throw new DependencyException("exception in constructor : " + ExceptionHandler.unfoldMessage(instExc));
             }
 
             // TODO: catch here sub exceptions
@@ -123,20 +176,20 @@ public class Instantiator {
 
         try {
             Class c = toInvokeOn.getClass();
-            
+
             // cache class methods to optimize
             Method[] methods = c.getMethods();
             Method method = null;
-            
+
             // find method by name, not parameters
             // TODO check for another methods with such name, if such exists throw exception
-            for (Method it: methods) {
+            for (Method it : methods) {
                 if (it.getName().equals(methodName)) {
                     method = it;
                     break;
                 }
             }
-            
+
             ArrayList methodParams = new ArrayList<Object>();
 
             int currentAddinationalParam = 0;
@@ -153,7 +206,7 @@ public class Instantiator {
                 } else {
                     try {
                         methodParams.add(this.sc.get(sc.lookupServiceName(it.getCanonicalName())));
-                    } catch (DependencyException e) { 
+                    } catch (DependencyException e) {
                         if (extraParams.size() > currentAddinationalParam && extraParams.get(currentAddinationalParam).getClass().getCanonicalName().equals(it.getCanonicalName())) {
                             methodParams.add(extraParams.get(currentAddinationalParam));
                             currentAddinationalParam++;
