@@ -2,7 +2,6 @@ package com.dot5enko.database;
 
 import com.dot5enko.di.DependencyException;
 import com.dot5enko.di.Instantiator;
-import com.dot5enko.test.mockup.StdOutLogger;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;

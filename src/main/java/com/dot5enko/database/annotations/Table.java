@@ -1,4 +1,4 @@
-package com.dot5enko.database;
+package com.dot5enko.database.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,5 +9,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 
 public @interface Table {
-	 String value();
+	 String value() default "";
+         boolean strict() default false;
 }

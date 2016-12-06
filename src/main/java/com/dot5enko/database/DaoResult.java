@@ -1,5 +1,6 @@
 package com.dot5enko.database;
 
+import com.dot5enko.database.exception.DaoObjectException;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;

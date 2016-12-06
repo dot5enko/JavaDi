@@ -1,4 +1,4 @@
-package com.dot5enko.database;
+package com.dot5enko.database.exception;
 
 public class DaoObjectException extends Exception {
 

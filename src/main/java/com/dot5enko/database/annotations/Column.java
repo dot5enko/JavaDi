@@ -1,4 +1,4 @@
-package com.dot5enko.database;
+package com.dot5enko.database.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

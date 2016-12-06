@@ -1,5 +1,6 @@
 package com.dot5enko.database;
 
+import com.dot5enko.database.exception.DaoObjectException;
 import com.dot5enko.di.annotation.InjectInstance;
 import java.math.BigInteger;
 import java.security.MessageDigest;
