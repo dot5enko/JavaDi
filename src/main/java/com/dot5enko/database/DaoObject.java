@@ -247,7 +247,20 @@ abstract public class DaoObject {
 
                 int _oldLifetime = Dao.cacheLifetime;
                 Dao.cacheLifetime = 2;
-                db.executeRawQuery(sql.toString());
+                System.out.println("db: del " + this.getClass().getSimpleName() + "#" + this.getPrimaryKeyValue());
+                try {
+                    for (Entry<String, RelationOptions> it : this.relOpts.entrySet()) {
+                        Vector<DaoObject> objs = this.get(it.getKey());
+                        if (objs != null) {
+                            for (DaoObject obj : this.get(it.getKey())) {
+                                obj.remove();
+                            }
+                        }
+                    }
+                    db.executeRawQuery(sql.toString());
+                } catch (Exception e) {
+                }
+
                 Dao.cacheLifetime = _oldLifetime;
 
                 if (Dao.useCache) {
@@ -269,7 +282,8 @@ abstract public class DaoObject {
                 throw new DaoObjectException("Can't delete unloaded objects!");
             }
         } catch (Exception e) {
-            throw new DaoObjectException("Please review column types and PrimaryKey()/TableName()");
+            e.printStackTrace();
+            throw new DaoObjectException("Please review column types and PrimaryKey()/TableName():");
         }
     }
 
@@ -404,29 +418,33 @@ abstract public class DaoObject {
         return this._primaryKey;
     }
 
+    private int getPrimaryKeyValue() {
+        try {
+            Field pKey = this.getClass().getField(this.PrimaryKey());
+            return (int) pKey.get(this);
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
     private void loadRelationsIfLazy() {
 
         if (this.getClass().isAnnotationPresent(Table.class)) {
-
             if (this.getClass().getAnnotation(Table.class).lazy()) {
-                try {
-                    Field pKey = this.getClass().getField(this.PrimaryKey());
 
-                    // only for sql dbs
-                    // and for ints :)
-                    if ((int) pKey.get(this) > 0) {
-                        // auto fetching of related objects
-                        for (Entry<String, RelationOptions> it : this.relOpts.entrySet()) {
-                            try {
-                                this.get(it.getKey());
-                            } catch (DaoObjectException ex) {
-                                System.out.println("error in initialization related objs fetched");
-                            }
+                // only for sql dbs
+                // and for ints :)
+                if (this.getPrimaryKeyValue() > 0) {
+                    // auto fetching of related objects
+                    for (Entry<String, RelationOptions> it : this.relOpts.entrySet()) {
+                        try {
+                            this.get(it.getKey());
+                        } catch (DaoObjectException ex) {
+                            System.out.println("error in initialization related objs fetched");
                         }
                     }
-                } catch (Exception ex) {
-                    System.out.println("Error while unlazied related resources");
                 }
+
             }
         }
     }

@@ -43,7 +43,11 @@ public class IndexController extends HttpController {
                 tags.append("<p>"+((Tag)it).value+"</p>");
             }
             
+            
+            
             response.setContent(p.body+"<h2>tags</h2>"+tags.toString());
+            
+            p.remove();
             
         } catch (DaoObjectException e) {
             response.setContent("Error while getting page:" + e.getMessage());

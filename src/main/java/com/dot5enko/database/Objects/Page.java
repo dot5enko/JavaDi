@@ -5,7 +5,7 @@ import com.dot5enko.database.DaoObject;
 import com.dot5enko.database.annotations.Table;
 import com.dot5enko.database.exception.DaoObjectException;
 
-@Table(lazy=false)
+@Table(lazy = false)
 public class Page extends DaoObject {
 
     public Page(int primaryKey) throws DaoObjectException {
