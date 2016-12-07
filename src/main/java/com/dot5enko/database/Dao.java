@@ -30,8 +30,7 @@ public class Dao {
 			this.lifetime = Dao.cacheLifetime;
 		}
 		
-	}	
-	
+	}
         
 	private AbstractDataProvider provider;
 	private WhereClause _wherecomp = new WhereAllRows();

@@ -103,7 +103,7 @@ public class ServiceContainer {
         }
 
         newResource.shared = shared;
-
+        
         this.objects.put(name, newResource);
         addToMapping(name, clazz);
     }

@@ -28,6 +28,8 @@ public final class MySQLProvider extends AbstractDataProvider {
     public MySQLProvider() throws SQLException, DependencyException {
         con = DriverManager.getConnection(config.getString("dsn"), config.getString("user"), config.getString("password"));
         debug = (boolean) config.getOrDefault("debug", false);
+        
+        System.out.println("db connection created");
     }
 
     @Override

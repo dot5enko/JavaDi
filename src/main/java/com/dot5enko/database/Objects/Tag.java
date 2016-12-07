@@ -16,6 +16,7 @@ public class Tag extends DaoObject {
 
     public String value;
 
+    @Override
     public void setup() {
         this.hasManyToMany("id", "tag_id", PageToTag.class, "page_id", "id", Page.class, "Pages");
     }

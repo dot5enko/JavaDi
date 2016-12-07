@@ -171,7 +171,7 @@ abstract public class DaoObject {
                         break;
                 }
 
-                System.out.println("RELATIONS: put `" + name + "` to class `" + this.getClass().getSimpleName() + "`");
+//                System.out.println("RELATIONS: put `" + name + "` to class `" + this.getClass().getSimpleName() + "`");
                 this.relations.put(name, db.executeRawQuery(hardcodedQ));
             }
 
