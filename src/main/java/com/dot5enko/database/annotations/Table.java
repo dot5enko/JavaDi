@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 
 public @interface Table {
-	 String value() default "";
-         boolean strict() default false;
+
+    String value() default "";
+    boolean strict() default false;
+    boolean lazy() default true;
 }

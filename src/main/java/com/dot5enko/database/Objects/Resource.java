@@ -14,6 +14,6 @@ public class Resource extends DaoObject {
 
     @Override
     public void setup() {
-        this.hasOne(ResourceCategory.class,"id","category_id");
+        this.hasOne("category_id","id",ResourceCategory.class);
     }
 }

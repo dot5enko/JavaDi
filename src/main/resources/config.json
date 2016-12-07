@@ -10,7 +10,8 @@
                 "options": {
                     "dsn": "jdbc:mysql://127.0.0.1/junior?useLegacyDatetimeCode=false&serverTimezone=Europe/Kiev",
                     "user": "root",
-                    "password": "root"
+                    "password": "root",
+                    "debug":true
                 }
             },
             "dao": {

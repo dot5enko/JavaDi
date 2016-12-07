@@ -22,13 +22,13 @@ public class ResourceCategory extends DaoObject {
     public int id;
 
     public String name;
-    
+
     public String seo_alias;
-    
+
     public int parent_id;
-    
+
     public void setup() {
-        this.hasOne(ResourceCategory.class,"id","parent_id","Parent");
-        this.hasMany(Page.class,"type","id","Pages");
+        this.hasOne("id", "parent_id", ResourceCategory.class, "Parent");
+        this.hasMany("type", "id", Page.class, "Pages");
     }
 }

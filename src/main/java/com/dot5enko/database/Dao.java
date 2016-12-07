@@ -36,7 +36,7 @@ public class Dao {
 	private AbstractDataProvider provider;
 	private WhereClause _wherecomp = new WhereAllRows();
 	
-	static boolean useCache = true;
+	static boolean useCache = false;
 	static int cacheLifetime = 1*30;
 	static HashMap<String,CacheItem> cache = new HashMap<String,CacheItem>();
 	static HashMap<String,String> cachedTables = new HashMap<String,String>();

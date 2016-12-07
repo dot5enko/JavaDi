@@ -30,11 +30,15 @@ abstract public class DaoObject {
 
     static class RelationOptions {
 
-        static int ONETOONE = 1;
-        static int ONETOMANY = 2;
+        final static int ONETOONE = 1;
+        final static int ONETOMANY = 2;
+        final static int MANYTOMANY = 3;
 
         HashMap<String, String> opts = new HashMap();
+
         Class<?> clazz;
+        Class<?> middle;
+
         int type;
     }
 
@@ -58,7 +62,7 @@ abstract public class DaoObject {
     }
 
     // relation methods
-    protected DaoObject hasOne(Class<?> clazz, String keyTo, String keyFrom, String relationName) {
+    protected DaoObject hasOne(String keyFrom, String keyTo, Class<?> clazz, String relationName) {
 
         RelationOptions otps = new RelationOptions();
         otps.opts.put("keyTo", keyTo);
@@ -72,7 +76,7 @@ abstract public class DaoObject {
         return this;
     }
 
-    protected DaoObject hasMany(Class<?> clazz, String keyTo, String keyFrom, String relationName) {
+    protected DaoObject hasMany(String keyFrom, String keyTo, Class<?> clazz, String relationName) {
 
         RelationOptions otps = new RelationOptions();
         otps.opts.put("keyTo", keyTo);
@@ -86,12 +90,29 @@ abstract public class DaoObject {
         return this;
     }
 
-    protected DaoObject hasMany(Class<?> clazz, String farKey, String nearKey) {
-        return this.hasMany(clazz, farKey, nearKey, clazz.getSimpleName());
+    protected DaoObject hasMany(String nearKey, String farKey, Class<?> clazz) {
+        return this.hasMany(nearKey, farKey, clazz, clazz.getSimpleName());
     }
 
-    protected DaoObject hasOne(Class<?> clazz, String farKey, String nearKey) {
-        return this.hasOne(clazz, farKey, nearKey, clazz.getSimpleName());
+    protected DaoObject hasManyToMany(String keyFrom, String middleFrom, Class<?> middle, String middleTo, String keyTo, Class<?> result, String relationName) {
+
+        RelationOptions otps = new RelationOptions();
+        otps.opts.put("keyTo", keyTo);
+        otps.opts.put("keyFrom", keyFrom);
+        otps.opts.put("middleTo", middleTo);
+        otps.opts.put("middleFrom", middleFrom);
+
+        otps.clazz = result;
+        otps.middle = middle;
+        otps.type = RelationOptions.MANYTOMANY;
+
+        this.relOpts.put(relationName, otps);
+
+        return this;
+    }
+
+    protected DaoObject hasOne(String nearKey, String farKey, Class<?> clazz) {
+        return this.hasOne(nearKey, farKey, clazz, clazz.getSimpleName());
     }
 
     public <T extends DaoObject> T getOne(String name) throws DaoObjectException {
@@ -131,12 +152,30 @@ abstract public class DaoObject {
             if (!this.relations.containsKey(name)) {
                 Field fromField;
                 fromField = this.getClass().getField(opts.opts.get("keyFrom"));
-                String hardcodedQ = "SELECT * FROM " + resultClass.TableName() + " WHERE `" + opts.opts.get("keyTo") + "` = \"" + fromField.get(this) + "\"";
+
+                String hardcodedQ = "";
+
+                switch (opts.type) {
+                    case RelationOptions.ONETOMANY:
+                    case RelationOptions.ONETOONE:
+
+                        hardcodedQ = "SELECT * FROM " + resultClass.TableName() + " WHERE `" + opts.opts.get("keyTo") + "` = \"" + fromField.get(this) + "\"";
+                        break;
+                    case RelationOptions.MANYTOMANY:
+
+                        DaoObject mClass = (DaoObject) opts.middle.newInstance();
+
+                        hardcodedQ = "SELECT * FROM " + resultClass.TableName() + " as rTable "
+                                + " JOIN " + mClass.TableName() + " as mTable ON mTable." + opts.opts.get("middleTo") + " = rTable." + opts.opts.get("keyTo")
+                                + " WHERE mTable.`" + opts.opts.get("middleFrom") + "` = \"" + fromField.get(this) + "\"";
+                        break;
+                }
+
+                System.out.println("RELATIONS: put `" + name + "` to class `" + this.getClass().getSimpleName() + "`");
                 this.relations.put(name, db.executeRawQuery(hardcodedQ));
             }
 
             return this.relations.get(name).parseObjects(resultClass);
-
         } catch (InstantiationException | IllegalAccessException | NoSuchFieldException | SecurityException ex) {
         } catch (ExecutingQueryException ex) {
             System.out.println(ex.getMessage());
@@ -180,6 +219,9 @@ abstract public class DaoObject {
             HashMap<String, String> primary = new HashMap<String, String>();
             primary.put(this.PrimaryKey(), String.valueOf(primaryKey));
             this.fill(primary);
+
+            this.loadRelationsIfLazy();
+
             this.parseColumns();
         }
     }
@@ -187,6 +229,8 @@ abstract public class DaoObject {
     public DaoObject(HashMap<String, String> data) throws DaoObjectException {
         this.initialize();
         this.fill(data);
+
+        this.loadRelationsIfLazy();
     }
 
     public void remove() throws DaoObjectException {
@@ -358,6 +402,33 @@ abstract public class DaoObject {
         }
 
         return this._primaryKey;
+    }
+
+    private void loadRelationsIfLazy() {
+
+        if (this.getClass().isAnnotationPresent(Table.class)) {
+
+            if (this.getClass().getAnnotation(Table.class).lazy()) {
+                try {
+                    Field pKey = this.getClass().getField(this.PrimaryKey());
+
+                    // only for sql dbs
+                    // and for ints :)
+                    if ((int) pKey.get(this) > 0) {
+                        // auto fetching of related objects
+                        for (Entry<String, RelationOptions> it : this.relOpts.entrySet()) {
+                            try {
+                                this.get(it.getKey());
+                            } catch (DaoObjectException ex) {
+                                System.out.println("error in initialization related objs fetched");
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    System.out.println("Error while unlazied related resources");
+                }
+            }
+        }
     }
 
     public void fill(HashMap<String, String> data) throws DaoObjectException {

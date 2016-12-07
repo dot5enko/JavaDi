@@ -16,6 +16,7 @@ import org.bson.Document;
 public final class MySQLProvider extends AbstractDataProvider {
 
     private Connection con;
+    private final boolean debug;
 
     // ServiceContainer magic
     private static Document config;
@@ -26,6 +27,7 @@ public final class MySQLProvider extends AbstractDataProvider {
 
     public MySQLProvider() throws SQLException, DependencyException {
         con = DriverManager.getConnection(config.getString("dsn"), config.getString("user"), config.getString("password"));
+        debug = (boolean) config.getOrDefault("debug", false);
     }
 
     @Override
@@ -33,6 +35,10 @@ public final class MySQLProvider extends AbstractDataProvider {
         try {
             java.sql.PreparedStatement s = con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 
+            if (debug) {
+                System.out.println("SQL >" + query);
+            }
+            
             s.execute();
 
             ResultSet raw = s.getResultSet();
@@ -65,7 +71,7 @@ public final class MySQLProvider extends AbstractDataProvider {
 
             return new DaoResult(data);
         } catch (SQLException e) {
-            throw new ExecutingQueryException("Can't execute query:"+e.getMessage());
+            throw new ExecutingQueryException("Can't execute query:" + e.getMessage());
         }
     }
 }
