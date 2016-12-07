@@ -10,7 +10,11 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import com.dot5enko.database.Dao.CacheItem;
+import com.dot5enko.database.exception.ExecutingQueryException;
 import com.dot5enko.di.annotation.Inject;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 //import sun.tools.tree.ThisExpression;
 abstract public class DaoObject {
@@ -24,9 +28,24 @@ abstract public class DaoObject {
 
     }
 
+    static class RelationOptions {
+
+        static int ONETOONE = 1;
+        static int ONETOMANY = 2;
+
+        HashMap<String, String> opts = new HashMap();
+        Class<?> clazz;
+        int type;
+    }
+
     private String _tableName = "";
     private String _primaryKey = "";
     private boolean _isLoaded = false;
+
+    private HashMap<String, DaoResult> relations = new HashMap();
+
+    // this is very bad. need to be static for Dao Class
+    private HashMap<String, RelationOptions> relOpts = new HashMap();
 
     @Inject
     private static Dao db;
@@ -36,6 +55,99 @@ abstract public class DaoObject {
 
     public DaoObject() {
         this.initialize();
+    }
+
+    // relation methods
+    protected DaoObject hasOne(Class<?> clazz, String keyTo, String keyFrom, String relationName) {
+
+        RelationOptions otps = new RelationOptions();
+        otps.opts.put("keyTo", keyTo);
+        otps.opts.put("keyFrom", keyFrom);
+
+        otps.clazz = clazz;
+        otps.type = RelationOptions.ONETOONE;
+
+        this.relOpts.put(relationName, otps);
+
+        return this;
+    }
+
+    protected DaoObject hasMany(Class<?> clazz, String keyTo, String keyFrom, String relationName) {
+
+        RelationOptions otps = new RelationOptions();
+        otps.opts.put("keyTo", keyTo);
+        otps.opts.put("keyFrom", keyFrom);
+
+        otps.clazz = clazz;
+        otps.type = RelationOptions.ONETOMANY;
+
+        this.relOpts.put(relationName, otps);
+
+        return this;
+    }
+
+    protected DaoObject hasMany(Class<?> clazz, String farKey, String nearKey) {
+        return this.hasMany(clazz, farKey, nearKey, clazz.getSimpleName());
+    }
+
+    protected DaoObject hasOne(Class<?> clazz, String farKey, String nearKey) {
+        return this.hasOne(clazz, farKey, nearKey, clazz.getSimpleName());
+    }
+
+    public <T extends DaoObject> T getOne(String name) throws DaoObjectException {
+
+        if (this.relOpts.containsKey(name)) {
+            RelationOptions opts = this.relOpts.get(name);
+            if (opts.type != RelationOptions.ONETOONE) {
+                throw new DaoObjectException("There is no such relation type (one to one) on class " + this.getClass().getSimpleName());
+            }
+        } else {
+            throw new DaoObjectException("There is no such relation `" + name + "` on class " + this.getClass().getSimpleName());
+        }
+
+        try {
+            if (this.get(name).size() > 0) {
+                return (T) this.get(name).get(0);
+            } else {
+                return null;
+            }
+        } catch (DaoObjectException e) {
+            System.out.println("error getting relative info `" + name + "` for class `" + this.getClass().getSimpleName() + "`:" + e.getMessage());
+            return null;
+        }
+    }
+
+    public <T extends DaoObject> Vector<T> get(String name) throws DaoObjectException {
+
+        // wet code
+        if (!this.relOpts.containsKey(name)) {
+            throw new DaoObjectException("There is no such relation `" + name + "` on class " + this.getClass().getSimpleName());
+        }
+
+        try {
+            RelationOptions opts = this.relOpts.get(name);
+
+            T resultClass = (T) opts.clazz.newInstance();
+            if (!this.relations.containsKey(name)) {
+                Field fromField;
+                fromField = this.getClass().getField(opts.opts.get("keyFrom"));
+                String hardcodedQ = "SELECT * FROM " + resultClass.TableName() + " WHERE `" + opts.opts.get("keyTo") + "` = \"" + fromField.get(this) + "\"";
+                this.relations.put(name, db.executeRawQuery(hardcodedQ));
+            }
+
+            return this.relations.get(name).parseObjects(resultClass);
+
+        } catch (InstantiationException | IllegalAccessException | NoSuchFieldException | SecurityException ex) {
+        } catch (ExecutingQueryException ex) {
+            System.out.println(ex.getMessage());
+            throw new DaoObjectException("Error while getting relative data for entity `" + this.getClass().getSimpleName() + "`, probably something wrong with setup method or entity class config");
+        }
+
+        return null;
+    }
+
+    public void setup() {
+
     }
 
     private void grabFromCache(CacheItem cache, int primary) throws DaoObjectException {
@@ -286,7 +398,7 @@ abstract public class DaoObject {
                     throw new DaoObjectException("No field '" + f.getKey() + "' found while filling " + this.getClass().getSimpleName());
                 }
             } else if (this.isStrict()) {
-                throw new DaoObjectException("Trying to assign non exist field '" + f.getKey() + "' while initializing object of class `"+this.getClass().getSimpleName()+"`");
+                throw new DaoObjectException("Trying to assign non exist field '" + f.getKey() + "' while initializing object of class `" + this.getClass().getSimpleName() + "`");
             }
         }
     }
@@ -349,7 +461,7 @@ abstract public class DaoObject {
         this.parseFieldsInfo();
         this._tableName = this.TableName();
         this._primaryKey = this.PrimaryKey();
-
+        this.setup();
     }
 
     private void parseColumns() throws DaoObjectException {
@@ -364,6 +476,8 @@ abstract public class DaoObject {
             throw new DaoObjectException("Error parsing a data from database. Perhaps such data not exists");
         } catch (IndexOutOfBoundsException e) {
             throw new DaoObjectException("Error parsing a data from database. MySQl returned 0 rows");
+        } catch (ExecutingQueryException ex) {
+            throw new DaoObjectException("Error configuring entity class `" + this.getClass().getSimpleName() + "`, check the config");
         }
     }
 };

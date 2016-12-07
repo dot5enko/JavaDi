@@ -1,6 +1,7 @@
 package com.dot5enko.database;
 
 import com.dot5enko.database.exception.DaoObjectException;
+import com.dot5enko.database.exception.ExecutingQueryException;
 import com.dot5enko.di.annotation.InjectInstance;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -95,7 +96,7 @@ public class Dao {
 		Dao.useCache = state;
 	}
 	
-	public DaoResult executeRawQuery(String q){
+	public DaoResult executeRawQuery(String q) throws ExecutingQueryException{
 		DaoResult _data = null;
 		
 		if (Dao.useCache) {

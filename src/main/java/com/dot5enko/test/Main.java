@@ -21,7 +21,7 @@ public class Main {
         ServiceContainer sc = ServiceContainer
                 .getInstance()
                 .initializeWithConfig(config.get("di", Document.class));
-
+        
         Server httpServer = new Server(config, () -> {
             return new HttpHandler(appConfig.getString("controllersPackage"));
         }, sc);

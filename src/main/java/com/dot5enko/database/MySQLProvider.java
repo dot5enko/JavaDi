@@ -1,5 +1,6 @@
 package com.dot5enko.database;
 
+import com.dot5enko.database.exception.ExecutingQueryException;
 import com.dot5enko.di.DependencyException;
 import com.dot5enko.di.Instantiator;
 import java.sql.Connection;
@@ -27,7 +28,8 @@ public final class MySQLProvider extends AbstractDataProvider {
         con = DriverManager.getConnection(config.getString("dsn"), config.getString("user"), config.getString("password"));
     }
 
-    public DaoResult execute(String query) {
+    @Override
+    public DaoResult execute(String query) throws ExecutingQueryException {
         try {
             java.sql.PreparedStatement s = con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 
@@ -63,8 +65,7 @@ public final class MySQLProvider extends AbstractDataProvider {
 
             return new DaoResult(data);
         } catch (SQLException e) {
-            System.out.println("Error: " + e);
+            throw new ExecutingQueryException("Can't execute query:"+e.getMessage());
         }
-        return null;
     }
 }
