@@ -1,23 +1,12 @@
 package com.dot5enko.database.annotations;
 
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.TYPE)
+@Target(ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(HasManyArray.class)
-@Relation
-public @interface HasMany {
-
-    String from();
-
-    String to() default "id";
-
-    Class<?> value();
-
-    String alias() default "";
-
+public @interface Relation {
+    boolean value() default true;
 }

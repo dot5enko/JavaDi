@@ -13,12 +13,10 @@ import com.dot5enko.database.Dao.CacheItem;
 import com.dot5enko.database.exception.ExecutingQueryException;
 import com.dot5enko.di.annotation.Inject;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 //import sun.tools.tree.ThisExpression;
 abstract public class DaoObject {
-
+    
     class FieldInfo {
 
         public String name;
@@ -48,9 +46,6 @@ abstract public class DaoObject {
 
     private HashMap<String, DaoResult> relations = new HashMap();
 
-    // this is very bad. need to be static for Dao Class
-    private HashMap<String, RelationOptions> relOpts = new HashMap();
-
     @Inject
     private static Dao db;
 
@@ -60,65 +55,11 @@ abstract public class DaoObject {
     public DaoObject() {
         this.initialize();
     }
-
-    // relation methods
-    protected DaoObject hasOne(String keyFrom, String keyTo, Class<?> clazz, String relationName) {
-
-        RelationOptions otps = new RelationOptions();
-        otps.opts.put("keyTo", keyTo);
-        otps.opts.put("keyFrom", keyFrom);
-
-        otps.clazz = clazz;
-        otps.type = RelationOptions.ONETOONE;
-
-        this.relOpts.put(relationName, otps);
-
-        return this;
-    }
-
-    protected DaoObject hasMany(String keyFrom, String keyTo, Class<?> clazz, String relationName) {
-
-        RelationOptions otps = new RelationOptions();
-        otps.opts.put("keyTo", keyTo);
-        otps.opts.put("keyFrom", keyFrom);
-
-        otps.clazz = clazz;
-        otps.type = RelationOptions.ONETOMANY;
-
-        this.relOpts.put(relationName, otps);
-
-        return this;
-    }
-
-    protected DaoObject hasMany(String nearKey, String farKey, Class<?> clazz) {
-        return this.hasMany(nearKey, farKey, clazz, clazz.getSimpleName());
-    }
-
-    protected DaoObject hasManyToMany(String keyFrom, String middleFrom, Class<?> middle, String middleTo, String keyTo, Class<?> result, String relationName) {
-
-        RelationOptions otps = new RelationOptions();
-        otps.opts.put("keyTo", keyTo);
-        otps.opts.put("keyFrom", keyFrom);
-        otps.opts.put("middleTo", middleTo);
-        otps.opts.put("middleFrom", middleFrom);
-
-        otps.clazz = result;
-        otps.middle = middle;
-        otps.type = RelationOptions.MANYTOMANY;
-
-        this.relOpts.put(relationName, otps);
-
-        return this;
-    }
-
-    protected DaoObject hasOne(String nearKey, String farKey, Class<?> clazz) {
-        return this.hasOne(nearKey, farKey, clazz, clazz.getSimpleName());
-    }
-
+    
     public <T extends DaoObject> T getOne(String name) throws DaoObjectException {
 
-        if (this.relOpts.containsKey(name)) {
-            RelationOptions opts = this.relOpts.get(name);
+        if (db.relations.get(this.getClass()).containsKey(name)) {
+            RelationOptions opts = db.relations.get(this.getClass()).get(name);
             if (opts.type != RelationOptions.ONETOONE) {
                 throw new DaoObjectException("There is no such relation type (one to one) on class " + this.getClass().getSimpleName());
             }
@@ -141,12 +82,12 @@ abstract public class DaoObject {
     public <T extends DaoObject> Vector<T> get(String name) throws DaoObjectException {
 
         // wet code
-        if (!this.relOpts.containsKey(name)) {
+        if (!this.db.relations.get(this.getClass()).containsKey(name)) {
             throw new DaoObjectException("There is no such relation `" + name + "` on class " + this.getClass().getSimpleName());
         }
 
         try {
-            RelationOptions opts = this.relOpts.get(name);
+            RelationOptions opts = this.db.relations.get(this.getClass()).get(name);
 
             T resultClass = (T) opts.clazz.newInstance();
             if (!this.relations.containsKey(name)) {
@@ -249,7 +190,7 @@ abstract public class DaoObject {
                 Dao.cacheLifetime = 2;
                 System.out.println("db: del " + this.getClass().getSimpleName() + "#" + this.getPrimaryKeyValue());
                 try {
-                    for (Entry<String, RelationOptions> it : this.relOpts.entrySet()) {
+                    for (Entry<String, RelationOptions> it : this.db.relations.get(this.getClass()).entrySet()) {
                         Vector<DaoObject> objs = this.get(it.getKey());
                         if (objs != null) {
                             for (DaoObject obj : this.get(it.getKey())) {
@@ -436,7 +377,7 @@ abstract public class DaoObject {
                 // and for ints :)
                 if (this.getPrimaryKeyValue() > 0) {
                     // auto fetching of related objects
-                    for (Entry<String, RelationOptions> it : this.relOpts.entrySet()) {
+                    for (Entry<String, RelationOptions> it : this.db.relations.get(this.getClass()).entrySet()) {
                         try {
                             this.get(it.getKey());
                         } catch (DaoObjectException ex) {

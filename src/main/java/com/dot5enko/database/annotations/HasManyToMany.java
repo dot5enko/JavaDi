@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(HasManyToManyArray.class)
+@Relation
 public @interface HasManyToMany {
 
     String from() default "id";
@@ -22,6 +23,6 @@ public @interface HasManyToMany {
     String to() default "id";
 
     Class<?> value();
-    
+
     String alias() default "";
 }

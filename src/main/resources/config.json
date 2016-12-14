@@ -15,7 +15,12 @@
                 }
             },
             "dao": {
-                "class": "com.dot5enko.database.Dao"
+                "class": "com.dot5enko.database.Dao",
+                "options" : {
+                    "watch": [
+                        "com.dot5enko.database.Objects"
+                    ]
+                }
             }
         },
         "initialize": [
