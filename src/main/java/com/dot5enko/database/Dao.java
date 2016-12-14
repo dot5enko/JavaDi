@@ -10,12 +10,23 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 import org.bson.Document;
 
 public class Dao {
 
-    public static HashMap<Class<?>, HashMap<String, DaoObject.RelationOptions>> relations = new HashMap();
+    public static class RelationOptions {
+
+        final static int ONETOONE = 1;
+        final static int ONETOMANY = 2;
+        final static int MANYTOMANY = 3;
+
+        HashMap<String, String> opts = new HashMap();
+
+        Class<?> clazz;
+        Class<?> middle;
+
+        int type;
+    }
 
     class CacheItem {
 
@@ -38,6 +49,8 @@ public class Dao {
 
     }
 
+    public static HashMap<String, HashMap<String, RelationOptions>> relations = new HashMap();
+
     private AbstractDataProvider provider;
     private WhereClause _wherecomp = new WhereAllRows();
 
@@ -49,35 +62,30 @@ public class Dao {
     // ServiceContainer magic
     private static Document config;
 
-
-    /*
-	public static void printCacheInfo() {
-		System.out.println("Dao cache dump ["+Dao.cache.size()+"]:");
-		
-		for (Entry<String, CacheItem> e: Dao.cache.entrySet()) {
-			System.out.println(e.getKey()+" ["+e.getValue().data.length()+" elements] fetched at "+new Date(e.getValue().fetched)+" for "+e.getValue().lifetime+"s.");
-		}
-		
-	}
-     */
     public static void setOptions(Document opts) {
         config = opts;
     }
 
     public Dao(@InjectInstance("database") AbstractDataProvider dataprovider) {
         this.provider = dataprovider;
-       
+
+        System.out.println("Dao initialized");
+
         RelationParser parser = new RelationParser();
-        
+
         List<String> parsePackages = config.get("watch", List.class);
         for (String packageName : parsePackages) {
+
+            System.out.println("Parsing db entitys in package " + packageName);
+
             for (Class<?> it : ClassFinder.find(packageName)) {
-                if (it.isAssignableFrom(DaoObject.class)) {
-                    relations.put(it, parser.getConfigurationForClass(it));
+                if (it.getSuperclass() != null && it.getSuperclass().equals(DaoObject.class)) {
+                    System.out.println("--->" + it.getCanonicalName() + "<->" + parser.getConfigurationForClass(it));
+                    relations.put(it.getCanonicalName(), parser.getConfigurationForClass(it));
                 }
             }
         }
-        
+
     }
 
     public Dao Where(WhereClause whereClause) {

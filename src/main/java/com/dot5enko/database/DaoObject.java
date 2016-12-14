@@ -10,13 +10,14 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import com.dot5enko.database.Dao.CacheItem;
+import com.dot5enko.database.Dao.RelationOptions;
 import com.dot5enko.database.exception.ExecutingQueryException;
 import com.dot5enko.di.annotation.Inject;
 import java.util.Vector;
 
 //import sun.tools.tree.ThisExpression;
 abstract public class DaoObject {
-    
+
     class FieldInfo {
 
         public String name;
@@ -24,20 +25,6 @@ abstract public class DaoObject {
         public boolean required; // is field required to save
         public boolean timestamp; // field would be overwritten by current timestamp on save()
 
-    }
-
-    static class RelationOptions {
-
-        final static int ONETOONE = 1;
-        final static int ONETOMANY = 2;
-        final static int MANYTOMANY = 3;
-
-        HashMap<String, String> opts = new HashMap();
-
-        Class<?> clazz;
-        Class<?> middle;
-
-        int type;
     }
 
     private String _tableName = "";
@@ -55,10 +42,10 @@ abstract public class DaoObject {
     public DaoObject() {
         this.initialize();
     }
-    
+
     public <T extends DaoObject> T getOne(String name) throws DaoObjectException {
 
-        if (db.relations.get(this.getClass()).containsKey(name)) {
+        if (db.relations.get(this.getClass().getCanonicalName()).containsKey(name)) {
             RelationOptions opts = db.relations.get(this.getClass()).get(name);
             if (opts.type != RelationOptions.ONETOONE) {
                 throw new DaoObjectException("There is no such relation type (one to one) on class " + this.getClass().getSimpleName());
@@ -81,13 +68,12 @@ abstract public class DaoObject {
 
     public <T extends DaoObject> Vector<T> get(String name) throws DaoObjectException {
 
-        // wet code
-        if (!this.db.relations.get(this.getClass()).containsKey(name)) {
+        if (!this.db.relations.get(this.getClass().getCanonicalName()).containsKey(name)) {
             throw new DaoObjectException("There is no such relation `" + name + "` on class " + this.getClass().getSimpleName());
         }
 
         try {
-            RelationOptions opts = this.db.relations.get(this.getClass()).get(name);
+            RelationOptions opts = this.db.relations.get(this.getClass().getCanonicalName()).get(name);
 
             T resultClass = (T) opts.clazz.newInstance();
             if (!this.relations.containsKey(name)) {

@@ -20,7 +20,7 @@ public class IndexController extends HttpController {
     public void pageAction() {
         try {
             Page p = new Page(Integer.parseInt(parameters.getOrDefault("id", "0")));
-
+            
             StringBuilder tags = new StringBuilder();
 
             for (DaoObject it : p.get("Tags")) {
@@ -30,6 +30,7 @@ public class IndexController extends HttpController {
             response.put(p.body + "<h2>tags</h2>" + tags.toString());
 
         } catch (DaoObjectException e) {
+            e.printStackTrace();
             response.setContent("Error while getting page:" + e.getMessage());
         }
 
