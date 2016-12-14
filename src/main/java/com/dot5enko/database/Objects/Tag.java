@@ -1,8 +1,10 @@
 package com.dot5enko.database.Objects;
 
 import com.dot5enko.database.DaoObject;
+import com.dot5enko.database.annotations.HasManyToMany;
 import com.dot5enko.database.exception.DaoObjectException;
 
+@HasManyToMany(mediateFrom = "tag_id", mediate = PageToTag.class, mediateTo = "page_id", value = Page.class, alias = "Pages")
 public class Tag extends DaoObject {
 
     public Tag(int primaryKey) throws DaoObjectException {
@@ -15,9 +17,4 @@ public class Tag extends DaoObject {
     public int id;
 
     public String value;
-
-    @Override
-    public void setup() {
-        this.hasManyToMany("id", "tag_id", PageToTag.class, "page_id", "id", Page.class, "Pages");
-    }
 }

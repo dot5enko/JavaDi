@@ -2,10 +2,12 @@ package com.dot5enko.database.Objects;
 
 import com.dot5enko.database.annotations.Column;
 import com.dot5enko.database.DaoObject;
-import com.dot5enko.database.annotations.Table;
+import com.dot5enko.database.annotations.*;
 import com.dot5enko.database.exception.DaoObjectException;
 
 @Table(lazy = false)
+@HasOne(from = "type", to = "id", value = ResourceCategory.class)
+@HasManyToMany(from = "id", mediateFrom = "page_id", mediate = PageToTag.class, mediateTo = "tag_id", to = "id", value = Tag.class, alias = "Tags")
 public class Page extends DaoObject {
 
     public Page(int primaryKey) throws DaoObjectException {
@@ -23,9 +25,4 @@ public class Page extends DaoObject {
     public String titleValue;
 
     public String body;
-
-    public void setup() {
-        this.hasOne("type", "id", ResourceCategory.class);
-        this.hasManyToMany("id", "page_id", PageToTag.class, "tag_id", "id", Tag.class, "Tags");
-    }
 }
