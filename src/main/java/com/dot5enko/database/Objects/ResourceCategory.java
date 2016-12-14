@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 @Table("resource_category")
 @HasOne(from = "parent_id", value = ResourceCategory.class, alias = "Parent")
-@HasMany(from = "type", value = Page.class, alias = "Pages")
+@HasMany(from = "id", to = "type", value = Page.class, alias = "Pages")
 public class ResourceCategory extends DaoObject {
 
     public ResourceCategory() {

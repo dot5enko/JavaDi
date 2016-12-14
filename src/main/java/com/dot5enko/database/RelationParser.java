@@ -3,14 +3,27 @@ package com.dot5enko.database;
 import com.dot5enko.database.Dao.RelationOptions;
 import com.dot5enko.database.annotations.*;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class RelationParser {
+
+    private HashMap<String, HashSet<String>> affectedEntitys = null;
+
+    private Class<?> current = null;
+
+    RelationParser(HashMap<String, HashSet<String>> affected) {
+        this.affectedEntitys = affected;
+    }
 
     // this is very bad. need to be static for Dao Class
     private HashMap<String, RelationOptions> relOpts = null;
 
     // relation methods
     private RelationParser hasOne(String keyFrom, String keyTo, Class<?> clazz, String relationName) {
+
+        HashSet<String> related = this.affectedEntitys.getOrDefault(clazz.getCanonicalName(), new HashSet());
+        related.add(this.current.getCanonicalName());
+        this.affectedEntitys.put(clazz.getCanonicalName(), related);
 
         RelationOptions otps = new RelationOptions();
         otps.opts.put("keyTo", keyTo);
@@ -29,6 +42,10 @@ public class RelationParser {
     }
 
     private RelationParser hasMany(String keyFrom, String keyTo, Class<?> clazz, String relationName) {
+
+        HashSet<String> related = this.affectedEntitys.getOrDefault(this.current.getCanonicalName(), new HashSet());
+        related.add(clazz.getCanonicalName());
+        this.affectedEntitys.put(this.current.getCanonicalName(), related);
 
         RelationOptions otps = new RelationOptions();
         otps.opts.put("keyTo", keyTo);
@@ -51,7 +68,11 @@ public class RelationParser {
     }
 
     private RelationParser hasManyToMany(String keyFrom, String middleFrom, Class<?> middle, String middleTo, String keyTo, Class<?> result, String relationName) {
-
+        
+        HashSet<String> related = this.affectedEntitys.getOrDefault(result.getCanonicalName(), new HashSet());
+        related.add(middle.getCanonicalName());
+        this.affectedEntitys.put(result.getCanonicalName(), related);
+        
         RelationOptions otps = new RelationOptions();
         otps.opts.put("keyTo", keyTo);
         otps.opts.put("keyFrom", keyFrom);
@@ -78,6 +99,7 @@ public class RelationParser {
     public HashMap<String, RelationOptions> getConfigurationForClass(Class<?> clazz) {
 
         this.relOpts = new HashMap();
+        this.current = clazz;
 
         HasManyArray hasManyArray = clazz.getAnnotation(HasManyArray.class);
         if (hasManyArray != null) {

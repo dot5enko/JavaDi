@@ -112,10 +112,6 @@ abstract public class DaoObject {
         return null;
     }
 
-    public void setup() {
-
-    }
-
     private void grabFromCache(CacheItem cache, int primary) throws DaoObjectException {
         DaoObject _cache = cache.data._cacheParsed.get(primary);
         if (_cache == null) {
@@ -175,18 +171,21 @@ abstract public class DaoObject {
                 int _oldLifetime = Dao.cacheLifetime;
                 Dao.cacheLifetime = 2;
                 System.out.println("db: del " + this.getClass().getSimpleName() + "#" + this.getPrimaryKeyValue());
-                try {
-                    for (Entry<String, RelationOptions> it : this.db.relations.get(this.getClass()).entrySet()) {
-                        Vector<DaoObject> objs = this.get(it.getKey());
-                        if (objs != null) {
-                            for (DaoObject obj : this.get(it.getKey())) {
-                                obj.remove();
-                            }
-                        }
-                    }
-                    db.executeRawQuery(sql.toString());
-                } catch (Exception e) {
-                }
+                
+                System.out.println(Dao.affectedEntitys.get(this.getClass().getCanonicalName()));
+                
+//                try {
+//                    for (Entry<String, RelationOptions> it : this.db.relations.get(this.getClass()).entrySet()) {
+//                        Vector<DaoObject> objs = this.get(it.getKey());
+//                        if (objs != null) {
+//                            for (DaoObject obj : this.get(it.getKey())) {
+//                                obj.remove();
+//                            }
+//                        }
+//                    }
+////                    db.executeRawQuery(sql.toString());
+//                } catch (Exception e) {
+//                }
 
                 Dao.cacheLifetime = _oldLifetime;
 
@@ -477,7 +476,6 @@ abstract public class DaoObject {
         this.parseFieldsInfo();
         this._tableName = this.TableName();
         this._primaryKey = this.PrimaryKey();
-        this.setup();
     }
 
     private void parseColumns() throws DaoObjectException {

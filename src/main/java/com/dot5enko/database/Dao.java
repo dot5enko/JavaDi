@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Vector;
 import org.bson.Document;
@@ -48,7 +49,8 @@ public class Dao {
         }
 
     }
-
+    
+    public static HashMap<String, HashSet<String>> affectedEntitys = new HashMap();
     public static HashMap<String, HashMap<String, RelationOptions>> relations = new HashMap();
 
     private AbstractDataProvider provider;
@@ -71,7 +73,7 @@ public class Dao {
 
         System.out.println("Dao initialized");
 
-        RelationParser parser = new RelationParser();
+        RelationParser parser = new RelationParser(affectedEntitys);
 
         List<String> parsePackages = config.get("watch", List.class);
         for (String packageName : parsePackages) {
